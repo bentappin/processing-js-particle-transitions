@@ -1,0 +1,5 @@
+A few particles/circles fly about the screen into shapes.
+
+First play with Processing.js.
+
+Decided to create something similar to http://9elements.com/io/projects/html5/canvas/. The code is very different though as the 9elements demo is written is JavaScript and pokes Processing.js into action, whereas mine is written in straight Processing(.js).
