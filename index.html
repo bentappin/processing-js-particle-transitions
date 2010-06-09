@@ -18,7 +18,7 @@ int maxSize = 25;
 Particle particles[] = new Particle[numParticles];
 Transition[] transitions;
 
-int[] transitionTimes = { 2456, 5345, 7390, 9500, 12988, 13955, 16555 };
+int[] transitionTimes = { 3456, 6345, 8390, 10500, 13988, 13955, 17555 };
 int currentTransitionIndex;
 
 int[][] topAndBottomCoords = new int[numParticles][2];
@@ -27,6 +27,7 @@ int[][] bigCircleTransitionCoords = new int[numParticles][2];
 int[][] mediumCircleTransitionCoords = new int[numParticles][2];
 int[][] smallCircleTransitionCoords = new int[numParticles][2];
 int[][] spiralTransitionCoords = new int[numParticles][2];
+
 
 void setup() {
     size(800, 600);
@@ -126,6 +127,12 @@ void draw() {
 	for(int i=0; i < numParticles; i++) {
 		particles[i].update();
 		particles[i].draw();
+		
+		// If we're at the end of the transitions, finish gracefully.
+		if(currentTransitionIndex == transitions.length()-1) {
+			particles[i].xtarget = width/2;
+			particles[i].ytarget = height/2;
+		}
 	}
 }
 
