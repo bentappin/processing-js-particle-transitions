@@ -1,83 +1,138 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Pricessing.js - Playing with particles and transitions</title>
   <script src="../processing.js"></script>
   <script src="../init.js"></script>
 </head>
 <body>
+<h1>Playing with particles and transitions.</h1>
 <p>
 <script type="application/processing">
-int numParticles = 20;
+int numParticles = 120;
 int minSize = 5;
-int maxSize = 50;
+int maxSize = 25;
+
 Particle particles[] = new Particle[numParticles];
-int frameCount = 0;
 Transition[] transitions;
 
-int[][] squareTransitionCoords = {
-	// Left
-	{10,20},
-	{10,40},
-	{10,60},
-	{10,80},
-	{10,100},
-	// Right
-	{100,20},
-	{100,40},
-	{100,60},
-	{100,80},
-	{100,100},
-	// Bottom
-	{20,100},
-	{40,100},
-	{60,100},
-	{80,100},
-	{100,100},
-	// Top
-	{20,10},
-	{40,10},
-	{60,10},
-	{80,10},
-	{100,10}
-};
+int[] transitionTimes = { 2456, 5345, 7390, 9500, 12988, 13955, 16555 };
+int currentTransitionIndex;
+
+int[][] topAndBottomCoords = new int[numParticles][2];
+int[][] randomTransitionCoords = new int[numParticles][2];
+int[][] bigCircleTransitionCoords = new int[numParticles][2];
+int[][] mediumCircleTransitionCoords = new int[numParticles][2];
+int[][] smallCircleTransitionCoords = new int[numParticles][2];
+int[][] spiralTransitionCoords = new int[numParticles][2];
 
 void setup() {
-    size(800, 400);
+    size(800, 600);
 	smooth();
 	noStroke();
     background(0);
-   
+	
+	// Load particles array with particles.
 	for(int i=0; i < numParticles; i++) {
-		particles[i] = new Particle(random(0,width), random(0,height), random(minSize, maxSize), random(0.0,0.5), random(0.0,0.5), color(random(255),random(255),random(255),random(255)));
+		particles[i] = new Particle(random(0,width-maxSize), random(0,height-maxSize),			// x,y.
+									random(0,width-maxSize), random(0,height-maxSize),			// Target x,y.
+									random(minSize, maxSize), random(0.2,0.5), random(0.2,0.5),	// Size and speeds.
+									color(random(255), random(255), random(255), random(255)));	// Color.
 	}
 	
-	transitions = new Transition[1];
-	transitions[0] = new Transition(squareTransitionCoords, 400, 100);
+	// Generate random coordinates for particles.
+	for(int i=0; i < randomTransitionCoords.length(); i++) {
+		randomTransitionCoords[i][0] = random(0, width-maxSize);
+		randomTransitionCoords[i][1] = random(0, height-maxSize);
+	}
+	
+	// Generate coordinates to send particles to the top
+	// and bottom of the screen.
+	for(int i=0; i < topAndBottomCoords.length()/2; i++) {
+		int x = width / numParticles * i * 2;
+		int y1 = maxSize/2;
+		int y2 = height - maxSize/2;
+		
+		topAndBottomCoords[i][0] = x;
+		topAndBottomCoords[i][1] = y1;
+		
+		topAndBottomCoords[i+(topAndBottomCoords.length()/2)][0] = x;
+		topAndBottomCoords[i+(topAndBottomCoords.length()/2)][1] = y2;
+	}
+	int radius;
+	
+	// **** SPIRAL HACK **** //
+	radius = 275;
+	for (int i = 0; i < numParticles; i++) {
+	    float x = sin(radians(i*3)) * radius * (i/100.0); 
+	    float y = cos(radians(i*3)) * radius * (i/100.0);
+		spiralTransitionCoords[i][0] = x;
+		spiralTransitionCoords[i][1] = y;
+	}
+
+	// Generate big circle coords.	
+	radius = 275;
+	for (int i = 0; i < numParticles; i++) {
+	    float x = sin(radians(i*3)) * radius; 
+	    float y = cos(radians(i*3)) * radius;
+		bigCircleTransitionCoords[i][0] = x;
+		bigCircleTransitionCoords[i][1] = y;
+	}
+	
+	// Generate medium circle coords.
+	radius = 175;
+	for (int i = 0; i < numParticles; i++) {
+	    float x = sin(radians(i*3)) * radius; 
+	    float y = cos(radians(i*3)) * radius;
+		mediumCircleTransitionCoords[i][0] = x;
+		mediumCircleTransitionCoords[i][1] = y;
+	}
+	
+	// Generate medium circle coords.
+	radius = 75;
+	for (int i = 0; i < numParticles; i++) {
+	    float x = sin(radians(i*3)) * radius; 
+	    float y = cos(radians(i*3)) * radius;
+		smallCircleTransitionCoords[i][0] = x;
+		smallCircleTransitionCoords[i][1] = y;
+	}
+	
+	transitions = new Transition[7];
+	transitions[0] = new Transition(mediumCircleTransitionCoords, width/2, height/2);
+	transitions[1] = new Transition(topAndBottomCoords);
+	transitions[2] = new Transition(randomTransitionCoords, width, height);
+	transitions[3] = new Transition(spiralTransitionCoords, width*0.35, height*0.35);
+	transitions[4] = new Transition(bigCircleTransitionCoords, width/2, height/2);
+	transitions[5] = new Transition(smallCircleTransitionCoords, width/2, height/2);
+	transitions[6] = new Transition(randomTransitionCoords, width, height);
+	currentTransitionIndex = 0;
 }
 
 void draw() {
-	frameCount++;
 	background(0);
 	
-	// Random positions
-	if (frameCount % 1000 == 0 ) {
-		for(int i=0; i < numParticles; i++) {
-			particles[i].randomTarget();
-		}
+	if( millis() >= transitionTimes[currentTransitionIndex]
+			&& currentTransitionIndex < transitionTimes.length()-1) {
+		currentTransitionIndex++;
 	}
 	
-	// Square Transition
-	if (frameCount % 1000 == 0 ) {
-		transitions[0].do(particles);
-	}
+	// Apply transition. do() method will not do anything if this
+	// transition has already been applied. Slight performance hit.
+	transitions[currentTransitionIndex].do(particles);
 	
+	// Update particle positions and draw them to the screen.
 	for(int i=0; i < numParticles; i++) {
 		particles[i].update();
 		particles[i].draw();
 	}
 }
 
+
 class Particle {
+	/*
+	 * Particle class models a particle and provides eased animation
+	 * through the update() and draw() methods
+	 */
 	float xpos;
 	float ypos;
 	float xtarget;
@@ -87,10 +142,13 @@ class Particle {
 	float diameter;
 	float xspeed;
 	float yspeed;
+	float wrapAaround = true;
 	
-	Particle(float xin, float yin, float din, float xsdin, float ysdin, Color cin) {
+	Particle(float xin, float yin, float xtin, float ytin, float din, float xsdin, float ysdin, Color cin) {
 		xpos = xin;
 		ypos = yin;
+		xtarget = xtin;
+		ytarget = ytin;
 		diameter = din;
 		colour = cin;
 		xspeed = xsdin;
@@ -100,14 +158,16 @@ class Particle {
 	void update() {
 		float dx = xtarget - xpos;
 		if(abs(dx) > 1) {
-		  xpos += dx * easing * xspeed;
+			xpos += dx * easing * xspeed;
 		}
 
 		float dy = ytarget - ypos;
 		if(abs(dy) > 1) {
-		  ypos += dy * easing * yspeed;
+			ypos += dy * easing * yspeed;
 		}
 		
+		if (xpos > width)  xpos=0;
+		if (ypos > height) ypos=0;
 	}
 	
 	void draw() {
@@ -123,9 +183,15 @@ class Particle {
 }
 
 class Transition {
+	/*
+	 * Transition class stores a set of target coordinates. When the do()
+	 * method is run and passed a Particle array it applies the target
+	 * coordinates on the Particles.
+	 */
 	int[][] coords;
 	int xoffset = 0;
 	int yoffset = 0;
+	boolean triggered = false;
 	
 	Transition (int[][] coin) {
 		coords = coin;
@@ -137,15 +203,20 @@ class Transition {
 		yoffset = yoff;
 	}
 	
-	void do(Particles[] ps) {
-		for(int i=0; i < ps.length(); i++) {
-			ps[i].xtarget = coords[i][0] + xoffset;
-			ps[i].ytarget = coords[i][1] + yoffset;
+	void do(Particle[] ps) {
+		if (!triggered) { // Don't set the target coordinates if it's already been done.
+			triggered = true;
+			for(int i=0; i < coords.length(); i++) {
+				ps[i].xtarget = coords[i][0] + xoffset;
+				ps[i].ytarget = coords[i][1] + yoffset;
+			}
 		}
 	}
 }
 </script>
-<canvas width="800" height="400"></canvas></p>
+<canvas width="800" height="600"></canvas>
+</p>
 <div style="height:0px;width:0px;overflow:hidden;"></div>
+<p>Uses the awesome <a href="http://processingjs.org/">Processing.js</a>.</p>
 </body>
 </html>
